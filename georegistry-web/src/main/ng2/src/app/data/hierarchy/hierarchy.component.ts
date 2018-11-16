@@ -177,9 +177,7 @@ export class HierarchyComponent implements OnInit {
 	  data.forEach( (hierarchyType, index) => {
 		  
 		  if(hierarchyType.rootGeoObjectTypes.length > 0){
-			  hierarchyType.rootGeoObjectTypes.forEach(rootGeoObjectType => {
-			    this.processHierarchyNodes(rootGeoObjectType);
-			  })
+			  this.processHierarchyNodes(hierarchyType.rootGeoObjectTypes);
 		  }
 		  
 		  hierarchies.push(hierarchyType);
@@ -203,15 +201,21 @@ export class HierarchyComponent implements OnInit {
 	  })
   }
   
+  private processHierarchyNodes(nodes: HierarchyNode[]){
+	  nodes.forEach(node => {
+		this.processHierarchyNode(node);
+	  });
+  }
+  
   /**
    * Set properties required by angular-tree-component using recursion.
    */
-  private processHierarchyNodes(node: HierarchyNode){
-	  node.label = this.getHierarchyLabel(node.geoObjectType);
-	  
-	  node.children.forEach(child => {
-		  this.processHierarchyNodes(child);
-	  })
+  private processHierarchyNode(node: HierarchyNode){
+	node.label = this.getHierarchyLabel(node.geoObjectType);
+	
+	node.children.forEach(child => {
+	  this.processHierarchyNode(child);
+	});
   }
   
   private getHierarchyLabel(geoObjectTypeCode: string):string {
@@ -282,9 +286,10 @@ export class HierarchyComponent implements OnInit {
 	  this.nodes = [];
 	  
 	  if(this.getHierarchy(hierarchyId).rootGeoObjectTypes.length > 0){
-	    // TODO: should rootGeoObjectTypes be hardcoded to only one entry in the array?
-	    this.nodes.push(this.getHierarchy(hierarchyId).rootGeoObjectTypes[0]);
-	    
+	    this.getHierarchy(hierarchyId).rootGeoObjectTypes.forEach(type => {
+		  this.nodes.push(type)
+	    });
+     
 	    setTimeout(() => {
 	      if(this && this.tree){
 		    this.tree.treeModel.expandAll();
@@ -306,8 +311,6 @@ export class HierarchyComponent implements OnInit {
       } );
       
       ( <CreateModalComponent>this.bsModalRef.content ).onHierarchytTypeCreate.subscribe( data => {
-    	  
-    	  // TODO: Make sure this works
     	  this.hierarchies.push(data);
       } );
   }
@@ -438,7 +441,7 @@ export class HierarchyComponent implements OnInit {
 
       ( <CreateChildModalComponent>this.bsModalRef.content ).onNodeChange.subscribe( hierarchyType => {
           
-          that.processHierarchyNodes(hierarchyType.rootGeoObjectTypes[0]);
+          that.processHierarchyNodes(hierarchyType.rootGeoObjectTypes);
           that.updateHierarchy(hierarchyType.code, hierarchyType.rootGeoObjectTypes)
           
           that.setNodesForHierarchy(hierarchyType);
@@ -469,7 +472,7 @@ export class HierarchyComponent implements OnInit {
           const d = that.current.data;
 
           
-          that.processHierarchyNodes(hierarchyType.rootGeoObjectTypes[0]);
+          that.processHierarchyNodes(hierarchyType.rootGeoObjectTypes);
           that.updateHierarchy(hierarchyType.code, hierarchyType.rootGeoObjectTypes)
           
           that.setNodesForHierarchy(hierarchyType);
@@ -534,7 +537,6 @@ export class HierarchyComponent implements OnInit {
   public error( err: any ): void {
       // Handle error
       if ( err !== null ) {
-    	  // TODO: add error modal
           this.bsModalRef = this.modalService.show( ErrorModalComponent, { backdrop: true } );
           this.bsModalRef.content.message = ( err.localizedMessage || err.message );
       }
